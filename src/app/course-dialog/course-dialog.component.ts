@@ -49,9 +49,34 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.form.valueChanges
+      .pipe(
+        filter(() => this.form.valid),
+        concatMap((changes) => this.saveCourse(changes))
+      )
+      .subscribe();
+  }
 
-  ngAfterViewInit() {}
+  saveForm() {}
+
+  saveCourse(changes) {
+    return fromPromise(
+      fetch(`/api/courses/${this.course.id}`, {
+        method: "PUT",
+        body: JSON.stringify(changes),
+        headers: {
+          "content-type": "application/json",
+        },
+      })
+    );
+  }
+
+  ngAfterViewInit() {
+    fromEvent(this.saveButton.nativeElement, "click")
+      .pipe(exhaustMap(() => this.saveCourse(this.form.value)))
+      .subscribe();
+  }
 
   close() {
     this.dialogRef.close();
