@@ -12,6 +12,7 @@ import {
   tap,
 } from "rxjs/operators";
 import { createHttpObservable } from "../common/util";
+import { Store } from "../common/store.service";
 
 @Component({
   selector: "home",
@@ -23,26 +24,13 @@ export class HomeComponent implements OnInit {
 
   advancedCourses$: Observable<Course[]>;
 
+  constructor(private store: Store) {}
+
   ngOnInit() {
-    const http$ = createHttpObservable("/api/courses");
+    const courses$ = this.store.courses$;
 
-    const courses$: Observable<Course[]> = http$.pipe(
-      tap(() => console.log("HTTP request executed")),
-      map((res) => Object.values(res["payload"])),
-      shareReplay(),
-      retryWhen((errors) => errors.pipe(delayWhen(() => timer(2000))))
-    );
+    this.beginnerCourses$ = this.store.selectBeginnerCourses();
 
-    this.beginnerCourses$ = courses$.pipe(
-      map((courses) =>
-        courses.filter((course) => course.category == "BEGINNER")
-      )
-    );
-
-    this.advancedCourses$ = courses$.pipe(
-      map((courses) =>
-        courses.filter((course) => course.category == "ADVANCED")
-      )
-    );
+    this.advancedCourses$ = this.store.selectAdvancedCourses();
   }
 }
